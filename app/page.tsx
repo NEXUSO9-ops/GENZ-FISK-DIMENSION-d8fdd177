@@ -23,7 +23,19 @@ export default function Home() {
   const [muted, setMuted] = useState(false)
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null)
 
-  useEffect(() => () => recognitionRef.current?.stop(), [])
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.code === "Space" && event.target instanceof HTMLElement && !["INPUT", "TEXTAREA", "BUTTON"].includes(event.target.tagName)) {
+        event.preventDefault()
+        startListening()
+      }
+    }
+    window.addEventListener("keydown", onKeyDown)
+    return () => {
+      window.removeEventListener("keydown", onKeyDown)
+      recognitionRef.current?.stop()
+    }
+  }, [voiceState])
 
   const startListening = () => {
     if (voiceState !== "idle") {
@@ -61,6 +73,11 @@ export default function Home() {
   return (
     <main className="shell">
       <div className="aurora" aria-hidden="true" />
+      <div className="avatar-host" data-state={voiceState} aria-label={`Voice avatar ${voiceState}`}>
+        <div className="avatar-scanline" />
+        <div className="avatar-image" style={{ backgroundImage: `url(${SOURCE_IMAGE})` }} />
+        <div className="avatar-caption"><span className="status-pip" /> AVATAR / {voiceState.toUpperCase()}</div>
+      </div>
       <header className="topbar">
         <div className="brand-lockup">
           <span className="brand-mark"><span /></span>
